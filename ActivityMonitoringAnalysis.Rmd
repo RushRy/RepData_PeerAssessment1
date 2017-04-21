@@ -1,0 +1,79 @@
+---
+title: "Reproducible Research: Peer Assessment 1"
+output:
+    html_document:
+        keep_md: true
+---
+
+## Loading and preprocessing the data
+
+First we need to make sure we reference all required libraries
+```{r references,results='hide'}
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(ggplot2))
+```
+
+Now we need to load the data and inspect it.
+```{r getdata}
+activity <- read.csv("activity.csv")
+str(activity)
+summary(activity)
+```
+
+The 'date' variable was read in as a character Factor and should be a Date datatype.
+```{r preprocessdates}
+activity$date <- as.POSIXct(activity$date)
+str(activity)
+```
+
+
+##Steps per Day Analysis
+
+Our first analysis is around the total # of steps per day. Let's create a new dataset to hold these values.
+```{r createdailysteps}
+dailySteps <- activity %>%
+    filter(!is.na(steps)) %>%
+    group_by(date) %>%
+    summarize(steps=sum(steps))
+str(dailySteps)
+```
+
+Let's see a histogram of the # of steps per day
+```{r dailystepshisto,fig.height=6,fig.width=8}
+ggplot(dailySteps, aes(x=steps)) +
+    geom_histogram(binwidth=1000, color="black") +
+    labs(title="Steps per Day", 
+         x="# of Steps", 
+         y="# of Days"
+         )
+```
+
+Let's look at the mean and median # of steps:
+```{r dailystepsmean,echo=FALSE,results='hide'}
+dlyStepsMean <- mean(dailySteps$steps)
+dlyStepsMedian <- median(dailySteps$steps)
+```
+* Mean # of steps: `r format(dlyStepsMean, scientific=100, big.mark = ",")`
+* Median # of steps: `r format(dlyStepsMedian, big.mark = ",")`
+
+## Average Daily Activity Pattern Analysis
+
+We want to look at what the average daily activity pattern looks like.  First, lets get a dataset which shows the total and average # of steps for each 5-minute interval
+```{r avgpattern}
+intervalSteps <- activity %>%
+    filter(!is.na(steps)) %>%
+    group_by(interval) %>%
+    summarize(totSteps=sum(steps), avgSteps=mean(steps))
+str(intervalSteps)
+```
+
+Let's chart a time-series graph to see how the daily pattern.
+```{r avgpatternchart,fig.height=6,fig.width=8}
+ggplot(intervalSteps, aes(x=interval,y=avgSteps,group=1)) +
+    geom_line(color="blue") +
+    labs(title="Average Steps by Interval",
+         xlab="5-min Interval",
+         ylab="Avg # of Steps"
+         )
+```
+
