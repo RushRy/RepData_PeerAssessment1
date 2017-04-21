@@ -96,3 +96,5 @@ incompleteRows
 ```
 
 So, we know there are **`r format(incompleteRows, big.mark=",")`** incomplete rows in the dataset.
+
+We need to replace all missing values (NAs) with a value to help avoid bias.  We'll use the average of the # of steps for the 5-minute period the missing value is associated with.
