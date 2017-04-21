@@ -87,3 +87,12 @@ The 5-minute period which has the maximum average # of steps across all dates is
 
 
 ## Imputing Missing Values
+
+There are a number of days/intervals where there are missing values. The presence of missing days may introduce bias into some calculations or summaries of the data.
+
+```{r nbrnas}
+incompleteRows <- nrow(activity[!complete.cases(activity), ])
+incompleteRows
+```
+
+So, we know there are **`r format(incompleteRows, big.mark=",")`** incomplete rows in the dataset.

@@ -126,3 +126,20 @@ ggplot(intervalSteps, aes(x=interval,y=avgSteps,group=1)) +
 ![](ActivityMonitoringAnalysis_files/figure-html/avgpatternchart-1.png)<!-- -->
 
 The 5-minute period which has the maximum average # of steps across all dates is period **835** marked by the green line.
+
+
+## Imputing Missing Values
+
+There are a number of days/intervals where there are missing values. The presence of missing days may introduce bias into some calculations or summaries of the data.
+
+
+```r
+incompleteRows <- nrow(activity[!complete.cases(activity), ])
+incompleteRows
+```
+
+```
+## [1] 2304
+```
+
+So, we know there are **2,304** incomplete rows in the dataset.
