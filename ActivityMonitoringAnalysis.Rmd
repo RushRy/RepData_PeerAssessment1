@@ -67,13 +67,23 @@ intervalSteps <- activity %>%
 str(intervalSteps)
 ```
 
+```{r computehighavgperiod,echo=FALSE,results='hide'}
+highestPeriod <- intervalSteps[intervalSteps$avgSteps==max(intervalSteps$avgSteps),]$interval
+```
+
+
 Let's chart a time-series graph to see how the daily pattern.
 ```{r avgpatternchart,fig.height=6,fig.width=8}
 ggplot(intervalSteps, aes(x=interval,y=avgSteps,group=1)) +
     geom_line(color="blue") +
+    geom_vline(xintercept = highestPeriod, color="green") +
     labs(title="Average Steps by Interval",
          xlab="5-min Interval",
          ylab="Avg # of Steps"
          )
 ```
 
+The 5-minute period which has the maximum average # of steps across all dates is period **`r highestPeriod`** marked by the green line.
+
+
+## Imputing Missing Values

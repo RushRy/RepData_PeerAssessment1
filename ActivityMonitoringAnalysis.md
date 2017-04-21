@@ -38,11 +38,10 @@ summary(activity)
 ##  NA's   :2304     (Other)   :15840
 ```
 
-The 'date' variable was read in as a character Factor and should be a Date datatype.  Also, the 'interval' variable should probably be a Factor.
+The 'date' variable was read in as a character Factor and should be a Date datatype.
 
 ```r
 activity$date <- as.POSIXct(activity$date)
-activity$interval <- as.factor(activity$interval)
 str(activity)
 ```
 
@@ -50,7 +49,7 @@ str(activity)
 ## 'data.frame':	17568 obs. of  3 variables:
 ##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
 ##  $ date    : POSIXct, format: "2012-10-01" "2012-10-01" ...
-##  $ interval: Factor w/ 288 levels "0","5","10","15",..: 1 2 3 4 5 6 7 8 9 10 ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
 ```
 
 
@@ -87,6 +86,43 @@ ggplot(dailySteps, aes(x=steps)) +
 
 Let's look at the mean and median # of steps:
 
-* Mean # of steps: 1.0766189\times 10^{4}
-* Median # of steps: 10765
+* Mean # of steps: 10,766.19
+* Median # of steps: 10,765
 
+## Average Daily Activity Pattern Analysis
+
+We want to look at what the average daily activity pattern looks like.  First, lets get a dataset which shows the total and average # of steps for each 5-minute interval
+
+```r
+intervalSteps <- activity %>%
+    filter(!is.na(steps)) %>%
+    group_by(interval) %>%
+    summarize(totSteps=sum(steps), avgSteps=mean(steps))
+str(intervalSteps)
+```
+
+```
+## Classes 'tbl_df', 'tbl' and 'data.frame':	288 obs. of  3 variables:
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
+##  $ totSteps: int  91 18 7 8 4 111 28 46 0 78 ...
+##  $ avgSteps: num  1.717 0.3396 0.1321 0.1509 0.0755 ...
+```
+
+
+
+
+Let's chart a time-series graph to see how the daily pattern.
+
+```r
+ggplot(intervalSteps, aes(x=interval,y=avgSteps,group=1)) +
+    geom_line(color="blue") +
+    geom_vline(xintercept = highestPeriod, color="green") +
+    labs(title="Average Steps by Interval",
+         xlab="5-min Interval",
+         ylab="Avg # of Steps"
+         )
+```
+
+![](ActivityMonitoringAnalysis_files/figure-html/avgpatternchart-1.png)<!-- -->
+
+The 5-minute period which has the maximum average # of steps across all dates is period **835** marked by the green line.
