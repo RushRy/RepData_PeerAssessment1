@@ -143,3 +143,92 @@ incompleteRows
 ```
 
 So, we know there are **2,304** incomplete rows in the dataset.
+
+We need to replace all missing values (NAs) with a value to help avoid bias.  We'll use the average of the # of steps for the 5-minute period the missing value is associated with.
+
+```r
+impute.mean <- function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))
+fixedActivity <- activity %>%
+    group_by(interval) %>%
+    mutate(stepsNew = impute.mean(steps)) %>%
+    select(-steps) %>%
+    inner_join(activity, by=c('interval','date')) %>%
+    select(-steps) %>%
+    rename(steps = stepsNew)
+summary(fixedActivity)
+```
+
+```
+##       date                        interval          steps       
+##  Min.   :2012-10-01 00:00:00   Min.   :   0.0   Min.   :  0.00  
+##  1st Qu.:2012-10-16 00:00:00   1st Qu.: 588.8   1st Qu.:  0.00  
+##  Median :2012-10-31 00:00:00   Median :1177.5   Median :  0.00  
+##  Mean   :2012-10-31 00:25:34   Mean   :1177.5   Mean   : 37.38  
+##  3rd Qu.:2012-11-15 00:00:00   3rd Qu.:1766.2   3rd Qu.: 27.00  
+##  Max.   :2012-11-30 00:00:00   Max.   :2355.0   Max.   :806.00
+```
+
+```r
+incompleteRows <- nrow(fixedActivity[!complete.cases(fixedActivity), ])
+incompleteRows
+```
+
+```
+## [1] 0
+```
+
+No we see all rows are complete!
+
+Let's make another Histogram now to see how the daily steps look.
+
+```r
+fixedDailySteps <- fixedActivity %>%
+    group_by(date) %>%
+    summarize(steps=sum(steps))
+ggplot(fixedDailySteps, aes(x=steps)) +
+    geom_histogram(binwidth=1000, color="black") +
+    labs(title="Steps per Day", 
+         x="# of Steps", 
+         y="# of Days"
+         )
+```
+
+![](ActivityMonitoringAnalysis_files/figure-html/imputedhistogram-1.png)<!-- -->
+
+Let's look at the mean and median # of steps after the fix is applied compared to the original values:
+
+* Mean # of steps: Original = 10,766.19; New = 10,766.19
+* Median # of steps: Original = 10,765; New = 10,766.19
+
+So, it appears that imputing the means had little affect on the estimates of total daily steps!
+
+## Activity Patterns by Weekday
+
+
+```r
+# use lubridate package to help identify the weekday of the date
+suppressPackageStartupMessages(library(lubridate))
+activity <- activity %>% mutate(weekdayGroup=as.factor(ifelse(wday(date) %in% c(1,7),"weekend","weekday")))
+summary(activity$weekdayGroup)
+```
+
+```
+## weekday weekend 
+##   12960    4608
+```
+
+
+Let's compare the average # of steps per 5-minute interval across the weekday groups.
+
+```r
+weekdayIntervalSteps <- activity %>%
+    group_by(interval, weekdayGroup) %>%
+    summarize(steps=sum(steps),stepsAvg=mean(steps))
+ggplot(weekdayIntervalSteps, aes(x=interval,y=stepsAvg,color=weekdayGroup)) +
+    facet_wrap("weekdayGroup", ncol=1) +
+    geom_line()
+```
+
+![](ActivityMonitoringAnalysis_files/figure-html/chartweekdaysteps-1.png)<!-- -->
+
+

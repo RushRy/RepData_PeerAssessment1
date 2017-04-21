@@ -98,3 +98,64 @@ incompleteRows
 So, we know there are **`r format(incompleteRows, big.mark=",")`** incomplete rows in the dataset.
 
 We need to replace all missing values (NAs) with a value to help avoid bias.  We'll use the average of the # of steps for the 5-minute period the missing value is associated with.
+```{r imputemeans}
+impute.mean <- function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))
+fixedActivity <- activity %>%
+    group_by(interval) %>%
+    mutate(stepsNew = impute.mean(steps)) %>%
+    select(-steps) %>%
+    inner_join(activity, by=c('interval','date')) %>%
+    select(-steps) %>%
+    rename(steps = stepsNew)
+summary(fixedActivity)
+incompleteRows <- nrow(fixedActivity[!complete.cases(fixedActivity), ])
+incompleteRows
+```
+
+No we see all rows are complete!
+
+Let's make another Histogram now to see how the daily steps look.
+```{r imputedhistogram,fig.height=6,fig.width=8}
+fixedDailySteps <- fixedActivity %>%
+    group_by(date) %>%
+    summarize(steps=sum(steps))
+ggplot(fixedDailySteps, aes(x=steps)) +
+    geom_histogram(binwidth=1000, color="black") +
+    labs(title="Steps per Day", 
+         x="# of Steps", 
+         y="# of Days"
+         )
+```
+
+Let's look at the mean and median # of steps after the fix is applied compared to the original values:
+```{r fixeddailystepsmean,echo=FALSE,results='hide'}
+dlyFixedStepsMean <- mean(fixedDailySteps$steps)
+dlyFixedStepsMedian <- median(fixedDailySteps$steps)
+```
+* Mean # of steps: Original = `r format(dlyStepsMean, scientific=100, big.mark = ",")`; New = `r format(dlyFixedStepsMean, scientific=100, big.mark = ",")`
+* Median # of steps: Original = `r format(dlyStepsMedian, big.mark = ",")`; New = `r format(dlyFixedStepsMedian, big.mark = ",")`
+
+So, it appears that imputing the means had little affect on the estimates of total daily steps!
+
+## Activity Patterns by Weekday
+
+Now let's look at how the activity patterns are affected by whether it's a weekday or a weekend.  First we need to add a factor indicating if it is a weekday or weekend.
+```{r addweekdaysgroup}
+# use lubridate package to help identify the weekday of the date
+suppressPackageStartupMessages(library(lubridate))
+fixedActivity <- fixedActivity %>% mutate(weekdayGroup=as.factor(ifelse(wday(date) %in% c(1,7),"weekend","weekday")))
+summary(fixedActivity$weekdayGroup)
+```
+
+
+Let's compare the average # of steps per 5-minute interval across the weekday groups.
+```{r chartweekdaysteps}
+weekdayIntervalSteps <- fixedActivity %>%
+    group_by(interval, weekdayGroup) %>%
+    summarize(steps=sum(steps),stepsAvg=mean(steps))
+ggplot(weekdayIntervalSteps, aes(x=interval,y=stepsAvg,color=weekdayGroup)) +
+    facet_wrap("weekdayGroup", ncol=1) +
+    geom_line()
+```
+
+
