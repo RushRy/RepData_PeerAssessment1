@@ -224,7 +224,7 @@ Let's compare the average # of steps per 5-minute interval across the weekday gr
 ```r
 weekdayIntervalSteps <- fixedActivity %>%
     group_by(interval, weekdayGroup) %>%
-    summarize(steps=sum(steps),stepsAvg=mean(steps))
+    summarize(stepsAvg=mean(steps),steps=sum(steps))
 ggplot(weekdayIntervalSteps, aes(x=interval,y=stepsAvg,color=weekdayGroup)) +
     facet_wrap("weekdayGroup", ncol=1) +
     geom_line()

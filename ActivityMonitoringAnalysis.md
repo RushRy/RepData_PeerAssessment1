@@ -204,12 +204,13 @@ So, it appears that imputing the means had little affect on the estimates of tot
 
 ## Activity Patterns by Weekday
 
+Now let's look at how the activity patterns are affected by whether it's a weekday or a weekend.  First we need to add a factor indicating if it is a weekday or weekend.
 
 ```r
 # use lubridate package to help identify the weekday of the date
 suppressPackageStartupMessages(library(lubridate))
-activity <- activity %>% mutate(weekdayGroup=as.factor(ifelse(wday(date) %in% c(1,7),"weekend","weekday")))
-summary(activity$weekdayGroup)
+fixedActivity <- fixedActivity %>% mutate(weekdayGroup=as.factor(ifelse(wday(date) %in% c(1,7),"weekend","weekday")))
+summary(fixedActivity$weekdayGroup)
 ```
 
 ```
@@ -221,9 +222,9 @@ summary(activity$weekdayGroup)
 Let's compare the average # of steps per 5-minute interval across the weekday groups.
 
 ```r
-weekdayIntervalSteps <- activity %>%
+weekdayIntervalSteps <- fixedActivity %>%
     group_by(interval, weekdayGroup) %>%
-    summarize(steps=sum(steps),stepsAvg=mean(steps))
+    summarize(stepsAvg=mean(steps),steps=sum(steps))
 ggplot(weekdayIntervalSteps, aes(x=interval,y=stepsAvg,color=weekdayGroup)) +
     facet_wrap("weekdayGroup", ncol=1) +
     geom_line()
